@@ -18,6 +18,12 @@ public class Player : MonoBehaviour
     [SerializeField] int maxPatience;
     int currentPatience;
 
+    public int CurrentPatience
+    {
+        get { return currentPatience; }
+        set {  currentPatience = value; }
+    }
+
     [SerializeField] int maxChargeCount;
     int currentChargeCount;
     [SerializeField] float timeToCharge;
@@ -33,6 +39,10 @@ public class Player : MonoBehaviour
     [SerializeField] float meleeLifetime;
     float timeSinceLastMelee;
 
+    bool reloading;
+    [SerializeField] float reloadTime;
+    float timeSinceReload;
+
     // references
     [SerializeField] CircleCollider2D cc;
     [SerializeField] SpriteRenderer sr;
@@ -42,6 +52,7 @@ public class Player : MonoBehaviour
     InputAction chargeAction;
     InputAction meleeAction;
     InputAction cursorPosition;
+    InputAction reloadAction;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -52,6 +63,7 @@ public class Player : MonoBehaviour
         shootAction = InputSystem.actions.FindAction("Shoot");
         chargeAction = InputSystem.actions.FindAction("Charge");
         meleeAction = InputSystem.actions.FindAction("Melee");
+        reloadAction = InputSystem.actions.FindAction("Reload");
     }
 
     // Update is called once per frame
@@ -61,6 +73,7 @@ public class Player : MonoBehaviour
         currentChargeTime += Time.deltaTime;
         timeSinceLastShot += Time.deltaTime;
         timeSinceLastMelee += Time.deltaTime;
+        timeSinceReload += Time.deltaTime;
         StateManagement();
         ChangeCursorColor();
         MoveCursor();
@@ -71,37 +84,55 @@ public class Player : MonoBehaviour
 
     void StateManagement()
     {
-        if (firedShot && timeSinceShotFired >= shotLifetime) //resets the shot state
+        if(!reloading)
         {
-            firedShot = false;
-            timeSinceShotFired = 0;
-        }
+            if(reloadAction.IsPressed())
+            {
+                reloading = true;
+                Debug.Log("reload started");
+            }
+            if (firedShot && timeSinceShotFired >= shotLifetime) //resets the shot state
+            {
+                firedShot = false;
+                timeSinceShotFired = 0;
+            }
 
-        if (!firedShot && shootAction.IsPressed()) //allows player to shoot again
-        {
-            shooting = true;
+            if (!firedShot && shootAction.IsPressed()) //allows player to shoot again
+            {
+                shooting = true;
+            }
+            else
+            {
+                shooting = false;
+            }
+
+            if (meleeActive && timeSinceLastMelee >= meleeLifetime) //resets the melee state
+            {
+                meleeActive = false;
+                timeSinceLastMelee = 0;
+            }
+
+            if (!meleeActive && meleeAction.IsPressed()) // allows player to melee again
+            {
+                meleeing = true;
+            }
+            else
+            {
+                meleeing = false;
+            }
         }
         else
         {
-            shooting = false;
+            if(reloading && timeSinceReload >= reloadTime)
+            {
+                reloading = false;
+                currentAmmo = maxAmmo;
+                Debug.Log("reload finished");
+            }
         }
 
-        if (meleeActive && timeSinceLastMelee >= meleeLifetime) //resets the melee state
-        {
-            meleeActive = false;
-            timeSinceLastMelee = 0;
-        }
 
-        if (!meleeActive && meleeAction.IsPressed()) // allows player to melee again
-        {
-            meleeing = true;
-        }
-        else
-        {
-            meleeing = false;
-        }
-
-        charging = chargeAction.IsPressed(); //holds charge
+            charging = chargeAction.IsPressed(); //holds charge
 
     }
 

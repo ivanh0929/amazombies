@@ -454,6 +454,7 @@ MonoBehaviour:
   shotLifetime: 0.05
   meleeCooldown: 0.1
   meleeLifetime: 0.05
+  reloadTime: 3
   cc: {fileID: 762984675}
   sr: {fileID: 762984672}
 --- !u!58 &762984675
